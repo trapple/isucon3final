@@ -149,10 +149,10 @@ post '/signup' => sub {
     );
     my $id = $self->dbh->last_insert_id;
     my $user = $self->dbh->select_row(
-        'SELECT * FROM users WHERE id=?', $id,
+        'SELECT name,icon,api_key FROM users WHERE id=?', $id,
     );
     $c->render_json({
-        id      => number $user->{id},
+        #id      => number $user->{id},
         name    => string $user->{name},
         icon    => string $c->req->uri_for("/icon/" . $user->{icon}),
         api_key => string $user->{api_key},
@@ -381,11 +381,11 @@ get '/timeline' => [qw/ get_user require_user /] => sub {
     my $latest_entry = $c->req->param("latest_entry");
     my ($sql, @params);
     if ($latest_entry) {
-        $sql = 'SELECT * FROM (SELECT * FROM entries WHERE (user=? OR publish_level=2 OR (publish_level=1 AND user IN (SELECT target FROM follow_map WHERE user=?))) AND id > ? ORDER BY id LIMIT 30) AS e ORDER BY e.id DESC';
+        $sql = 'SELECT * FROM (SELECT entries.*, users.id as uid,users.name,users.icon FROM entries JOIN users ON entries.user = users.id WHERE (user=? OR publish_level=2 OR (publish_level=1 AND user IN (SELECT target FROM follow_map WHERE user=?))) AND entries.id > ? ORDER BY entries.id LIMIT 30) AS e ORDER BY e.id DESC';
         @params = ($user->{id}, $user->{id}, $latest_entry);
     }
     else {
-        $sql = 'SELECT * FROM entries WHERE (user=? OR publish_level=2 OR (publish_level=1 AND user IN (SELECT target FROM follow_map WHERE user=?))) ORDER BY id DESC LIMIT 30';
+        $sql = 'SELECT entries.*,users.id as uid,users.name, users.icon FROM entries JOIN users ON entries.user = users.id WHERE (user=? OR publish_level=2 OR (publish_level=1 AND user IN (SELECT target FROM follow_map WHERE user=?))) ORDER BY entries.id DESC LIMIT 30';
         @params = ($user->{id}, $user->{id});
     }
     my $start = time;
@@ -408,17 +408,20 @@ get '/timeline' => [qw/ get_user require_user /] => sub {
         entries => [
             map {
                 my $entry = $_;
-                my $user  = $self->dbh->select_row(
-                    "SELECT * FROM users WHERE id=?", $entry->{user},
-                );
+                #my $user  = $self->dbh->select_row(
+                #    "SELECT * FROM users WHERE id=?", $entry->{user},
+                #);
                 +{
                     id         => number $entry->{id},
                     image      => string $c->req->uri_for("/image/" . $entry->{image}),
                     publish_level => number $entry->{publish_level},
                     user => {
-                        id   => number $user->{id},
-                        name => string $user->{name},
-                        icon => string $c->req->uri_for("/icon/" . $user->{icon}),
+                        #id   => number $user->{id},
+                        #name => string $user->{name},
+                        #icon => string $c->req->uri_for("/icon/" . $user->{icon}),
+                        id   => number $_->{uid},
+                        name => string $_->{name},
+                        icon => string $c->req->uri_for("/icon/" . $_->{icon}),
                     },
                 }
             } @entries
