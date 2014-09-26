@@ -129,12 +129,12 @@ filter 'get_user' => sub {
     };
 };
 
-get '/' => sub {
-    my ( $self, $c )  = @_;
-    open my $fh, "<", "./public/index.html";
-    my $html = do { local $/; <$fh> };
-    $c->res->body($html);
-};
+#get '/' => sub {
+#    my ( $self, $c )  = @_;
+#    open my $fh, "<", "./public/index.html";
+#    my $html = do { local $/; <$fh> };
+#    $c->res->body($html);
+#};
 
 post '/signup' => sub {
     my ( $self, $c ) = @_;
