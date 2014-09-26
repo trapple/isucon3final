@@ -204,6 +204,9 @@ post '/icon' => [qw/ get_user require_user /] => sub {
     my $dir  = $self->load_config->{data_dir};
     File::Copy::move($file, "$dir/icon/$icon.png")
         or $c->halt(500);
+    system("convert", "-geometry", "128x128", "$dir/icon/$icon.png", "$dir/icon/$icon" . "_l" . ".png");
+    system("convert", "-geometry", "64x64", "$dir/icon/$icon.png", "$dir/icon/$icon" . "_m" . ".png");
+    system("convert", "-geometry", "32x32", "$dir/icon/$icon.png", "$dir/icon/$icon" . "_s" . ".png");
 
     $self->dbh->query(
         'UPDATE users SET icon=? WHERE id=?',
